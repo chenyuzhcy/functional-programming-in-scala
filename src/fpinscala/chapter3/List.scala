@@ -145,17 +145,17 @@ object List {
 
 
   // 3.25
-  def statsWith[A](l1: List[A], l2: List[A]): Boolean = {
+  def startsWith[A](l1: List[A], l2: List[A]): Boolean = {
     (l1, l2) match {
       case (_, Nil) => true
-      case (Cons(h1, t1), Cons(h2, t2)) if h1 == h2 => statsWith(t1, t2)
+      case (Cons(h1, t1), Cons(h2, t2)) if h1 == h2 => startsWith(t1, t2)
       case _ => false
     }
   }
   def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = {
     sup match {
       case Nil => false
-      case Cons(_, _) if statsWith(sup, sub) => true
+      case Cons(_, _) if startsWith(sup, sub) => true
       case Cons(_, t) => hasSubsequence(t, sub)
     }
   }

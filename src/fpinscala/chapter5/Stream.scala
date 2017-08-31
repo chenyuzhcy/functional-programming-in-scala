@@ -1,5 +1,6 @@
 package fpinscala.chapter5
 
+import Stream._
 sealed trait Stream[+A] {
 
   // 5.1
@@ -51,7 +52,7 @@ sealed trait Stream[+A] {
 
   // 5.5
   def takeWhile_2(p: A => Boolean): Stream[A] =
-    foldRight(Empty[A])((a, acc) => if(p(a)) Cons(() => a, () => acc) else Empty)
+    foldRight(empty[A])((a, acc) => if(p(a)) Cons(() => a, () => acc) else Empty)
 
   // 5.6
   def headOption: Option[A] = this match {
@@ -64,40 +65,59 @@ sealed trait Stream[+A] {
 
   // 5.7
   def map[B](f: A => B): Stream[B] =
-    foldRight(Empty[B])((a, acc) => Cons(() => f(a), () => acc))
+    foldRight(empty[B])((a, acc) => Cons(() => f(a), () => acc))
 
   def filter(f: A => Boolean): Stream[A] =
-    foldRight(Empty[A])((a, acc) => if(f(a)) Cons(() => a, () => acc) else acc)
+    foldRight(empty[A])((a, acc) => if(f(a)) Cons(() => a, () => acc) else acc)
 
   def append[B>:A](b: => Stream[B]): Stream[B] =
     foldRight(b)((a, acc) => Cons(() => a, () => acc))
 
   def flatMap[B](f: A => Stream[B]): Stream[B] =
-    foldRight(Empty[B])((a, acc) => f(a).append(acc))
+    foldRight(empty[B])((a, acc) => f(a).append(acc))
+
 
   // 5.13
   // use unfold to implement map, take, takeWhile, zipWith, zipAll
-  // def zipAll[B](s2: Stream[B]): Stream[(Option(A), Option(B))] =
+  def map_unfold[B](f: A => B): Stream[B] =
+    unfold(this) {
+      case Cons(h,t) => Some((f(h()), t()))
+      case _ => None
+    }
 
-  // think about implement hasSubsequence in Chapter3 using stream
-  // def hasSubsequence[A](s: Stream[A]): Boolean =
+  def take_unfold(n: Int): Stream[A] =
+    unfold((this, n))({
+      case (Cons(h, t), n) if n > 0 => Some((h(), (t(), n-1)))
+      case _ => None
+    })
 
+  def takeWhile_unfold(f: A => Boolean): Stream[A] =
+    unfold(this)({
+      case Cons(h, t) if f(h()) => Some((h(), t()))
+      case _ => None
+    })
 
+  def zipWith[B, C](b: Stream[B])(f: (A, B)=>C): Stream[C] =
+    unfold((this, b))({
+      case (Cons(ha, ta), Cons(hb, tb)) => Some((f(ha(), hb()), (ta(), tb())))
+      case _ => None
+    })
 
-
-
-
-
-
-
+  // def zipAll[B](b: Stream[B]): Stream[(Option[A],Option[B])] =
 
 
   // 5.14
-  // def startsWith[A](s: Stream[A]): Boolean =
+  def startsWith[A](s: Stream[A]): Boolean = {
+    (this, s) match {
+      case (_, Empty) => true
+      case (Cons(h1, t1), Cons(h2, t2)) if h1() == h2() => t1() startsWith(t2())
+      case _ => false
+    }
+  }
 
   // 5.15
   // tails(Stream[1, 2, 3]) = Stream(Stream(1,2,3), Stream(2,3), Stream(3), Stream())
-  // def tails: Stream[Stream[A]] =
+  // def tails: Stream[Stream[A]]=
 
   // Now implement hasSubsequence in Chapter3 using stream
   // def hasSubsequence[A](s: Stream[A]): Boolean =
@@ -166,4 +186,6 @@ object Stream {
 
   def ones_unfold: Stream[Int] =
     unfold(1)(_ => Some((1, 1)))
+
+
 }
