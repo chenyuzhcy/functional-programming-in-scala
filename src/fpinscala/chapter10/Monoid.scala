@@ -28,6 +28,10 @@ object Monoid {
   }
 
   // 10.2
+  def optionMoniod[A]: Monoid[Option[A]] = new Monoid[Option[A]] {
+    override def op(a1: Option[A], a2: Option[A]): Option[A] = a1.orElse(a2)
+    override def zero: Option[A] = None
+  }
 
   // 10.3
   def endoMonoid[A]: Monoid[A => A] = new Monoid[A => A] {
