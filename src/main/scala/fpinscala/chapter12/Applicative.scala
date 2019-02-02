@@ -1,6 +1,6 @@
 package fpinscala.chapter12
 
-import fpinscala.chapter11.{Functor}
+import fpinscala.chapter11.Functor
 
 trait Applicative[F[_]] extends Functor[F] {
   def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] = apply(map(fa)(f.curried))(fb)
@@ -99,15 +99,3 @@ trait Monad[F[_]] extends Applicative[F] {
   def flatMap[A, B](ma: F[A])(f: A => F[B]): F[B]
 }
 
-trait Traverse[F[_]] extends Functor[F] {
-  def traverse[G[_], A, B](fa: F[A])(f: A => G[B])(implicit G: Applicative[G]): G[F[B]] = sequence(map(fa)(f))
-  def sequence[G[_], A](fga: F[G[A]])(implicit G: Applicative[G]): G[F[A]] = traverse(fga)(identity)
-
-  // 12.14
-  type Id[A] = A
-  val idMonad = new Monad[Id] {
-    def unit[A](a: => A): Id[A] = a
-    override def flatMap[A, B](ma: Id[A])(f: A => Id[B]): Id[B] = f(ma)
-  }
-  def map[A, B](fa: F[A])(f: A => B): F[B] = traverse[Id, A, B](fa)(f)(idMonad)
-}
